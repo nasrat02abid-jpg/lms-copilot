@@ -1,15 +1,19 @@
+from datetime import datetime, timedelta
+
+
 def detect_intent(command):
-    
     command = command.lower().strip()
 
     result = {
         "intent": "unknown",
         "course": None,
-        "filter": None
+        "filter": None,
+        "activity_type": None,
+        "time_filter": None
     }
 
     # ----------------------------
-    # COURSE DETECTION
+    # COURSE
     # ----------------------------
 
     if "data science" in command:
@@ -29,10 +33,44 @@ def detect_intent(command):
         or "computer organization" in command
         or "coal" in command
     ):
-        result["course"] = "assembly"
+        result["course"] = "computer organization"
 
     # ----------------------------
-    # FILTER DETECTION
+    # ACTIVITY TYPE
+    # ----------------------------
+
+    if "quiz" in command or "quizzes" in command:
+        result["activity_type"] = "quiz"
+
+    elif "assignment" in command or "assignments" in command:
+        result["activity_type"] = "assignment"
+
+    elif (
+        "activity" in command
+        or "activities" in command
+        or "work" in command
+        or "task" in command
+    ):
+        result["activity_type"] = "all"
+
+    # ----------------------------
+    # TIME
+    # ----------------------------
+
+    if "tomorrow" in command:
+        result["time_filter"] = "tomorrow"
+
+    elif "next week" in command:
+        result["time_filter"] = "next_week"
+
+    elif "this week" in command:
+        result["time_filter"] = "this_week"
+
+    elif "today" in command:
+        result["time_filter"] = "today"
+
+    # ----------------------------
+    # STATUS
     # ----------------------------
 
     if "overdue" in command:
@@ -47,44 +85,45 @@ def detect_intent(command):
     elif "pending" in command:
         result["filter"] = "pending"
 
-    elif (
-        "due soon" in command
-        or "soon" in command
-    ):
+    elif "due soon" in command:
         result["filter"] = "due_soon"
 
     # ----------------------------
-    # INTENT DETECTION
+    # NEXT ITEM
     # ----------------------------
 
-    deadline_phrases = [
-        "next deadline",
-        "closest deadline",
-        "nearest deadline",
-        "next due",
-        "what should i do first"
-    ]
+    if (
+        "next deadline" in command
+        or "closest deadline" in command
+        or "nearest deadline" in command
+        or "next assignment" in command
+        or "next quiz" in command
+        or "what should i do first" in command
+    ):
+        result["intent"] = "next_activity"
 
-    for phrase in deadline_phrases:
+        return result
 
-        if phrase in command:
-            result["intent"] = "next_deadline"
-            return result
+    # ----------------------------
+    # UPCOMING ACTIVITY
+    # ----------------------------
 
-    assignment_words = [
+    words = [
         "assignment",
         "assignments",
+        "quiz",
+        "quizzes",
+        "activity",
+        "activities",
         "work",
         "task",
         "tasks",
+        "deadline",
         "due",
-        "deadline"
+        "coming up"
     ]
 
-    for word in assignment_words:
-
-        if word in command:
-            result["intent"] = "check_assignments"
-            return result
+    if any(word in command for word in words):
+        result["intent"] = "check_activities"
 
     return result
